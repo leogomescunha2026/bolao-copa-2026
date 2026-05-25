@@ -894,7 +894,7 @@ window.exportCSV = function() {
   const ranked = participants.map(p=>({...p,...calcScore(p.palpites||{},cadResults)})).sort((a,b)=>b.pts-a.pts);
   ranked.forEach(p => {
     csv += `"${p.name}",${p.pts},${p.exact},${p.winner}`;
-    ALL_JOGOS.forEach(j => { const pal=(p.palpites||{})[j.id]; csv += pal?`,${pal.g1}-${pal.g2}`,`,-`; });
+    ALL_JOGOS.forEach(j => { const pal=(p.palpites||{})[j.id]; csv += pal ? (','+pal.g1+'-'+pal.g2) : ',-'; });
     csv += '\n';
   });
   const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
