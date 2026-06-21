@@ -135,7 +135,7 @@ input[type=number]{width:68px;text-align:center;font-size:22px;font-weight:700;f
 <div id="page-cadastro" class="page active">
 <div class="wrap">
   <div class="hero">
-    <div class="hero-pill">&#x26BD; Bolao Solidario</div>
+    <div class="hero-pill">&#x26BD; Bolao Solidario da</div>
     <h1>Copa do Mundo <em>2026</em></h1>
     <p>Faca seus palpites e torca para acertar. Boa sorte!</p>
   </div>
@@ -566,6 +566,14 @@ function enviarPalpites() {
   btn.textContent = 'Enviando...';
 
   db.collection('participants').doc(docId).get().then(function(doc2) {
+    // If this is NOT the first phase, participant must already exist (registered in groups phase)
+    var faseIndex = FASES.findIndex(function(f) { return f.id === fase.id; });
+    if (faseIndex > 0 && !doc2.exists) {
+      showAlert('cadAlert','err','Nome nao encontrado na Fase de Grupos. Revise se digitou o nome e sobrenome exatamente como na primeira fase.');
+      btn.disabled = false;
+      btn.textContent = 'Enviar Palpites';
+      return;
+    }
     // Check if any palpite from current phase already exists
     if (doc2.exists) {
       var existingPalpites = doc2.data().palpites || {};
