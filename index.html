@@ -135,7 +135,7 @@ input[type=number]{width:68px;text-align:center;font-size:22px;font-weight:700;f
 <div id="page-cadastro" class="page active">
 <div class="wrap">
   <div class="hero">
-    <div class="hero-pill">&#x26BD; Bolao Solidario </div>
+    <div class="hero-pill">&#x26BD; Bolao Solidario da Empresa</div>
     <h1>Copa do Mundo <em>2026</em></h1>
     <p>Faca seus palpites e torca para acertar. Boa sorte!</p>
   </div>
@@ -302,44 +302,47 @@ var FASES = [
     {id:'gl5',fase:'Grupo L',t1:'Croacia',t2:'Inglaterra',f1:'HR',f2:'GB'},
     {id:'gl6',fase:'Grupo L',t1:'Gana',t2:'Panama',f1:'GH',f2:'PA'}
   ]},
+  {id:'segundafase',label:'Segunda Fase (32 avos)',open:false,jogos:[
+    {id:'o1',fase:'32 avos',t1:'2 Grupo A',t2:'2 Grupo B',f1:'',f2:''},
+    {id:'o2',fase:'32 avos',t1:'1 Grupo E',t2:'3 melhor (A,B,C,D ou F)',f1:'',f2:''},
+    {id:'o3',fase:'32 avos',t1:'1 Grupo F',t2:'2 Grupo C',f1:'',f2:''},
+    {id:'o4',fase:'32 avos',t1:'1 Grupo C',t2:'2 Grupo F',f1:'',f2:''},
+    {id:'o5',fase:'32 avos',t1:'2 Grupo E',t2:'2 Grupo I',f1:'',f2:''},
+    {id:'o6',fase:'32 avos',t1:'1 Grupo I',t2:'3 melhor (C,D,F,G ou H)',f1:'',f2:''},
+    {id:'o7',fase:'32 avos',t1:'1 Grupo A',t2:'3 melhor (C,E,F,H ou I)',f1:'',f2:''},
+    {id:'o8',fase:'32 avos',t1:'1 Grupo D',t2:'3 melhor (B,E,F,I ou J)',f1:'',f2:''},
+    {id:'o9',fase:'32 avos',t1:'1 Grupo L',t2:'3 melhor (E,H,I,J ou K)',f1:'',f2:''},
+    {id:'o10',fase:'32 avos',t1:'1 Grupo G',t2:'3 melhor (A,E,H,I ou J)',f1:'',f2:''},
+    {id:'o11',fase:'32 avos',t1:'1 Grupo H',t2:'2 Grupo J',f1:'',f2:''},
+    {id:'o12',fase:'32 avos',t1:'2 Grupo K',t2:'2 Grupo L',f1:'',f2:''},
+    {id:'o13',fase:'32 avos',t1:'1 Grupo B',t2:'3 melhor (E,F,G,I ou J)',f1:'',f2:''},
+    {id:'o14',fase:'32 avos',t1:'1 Grupo J',t2:'2 Grupo H',f1:'',f2:''},
+    {id:'o15',fase:'32 avos',t1:'2 Grupo D',t2:'2 Grupo G',f1:'',f2:''},
+    {id:'o16',fase:'32 avos',t1:'1 Grupo K',t2:'3 melhor (D,E,I,J ou L)',f1:'',f2:''}
+  ]},
   {id:'oitavas',label:'Oitavas de Final',open:false,jogos:[
-    {id:'o1',fase:'Oitavas',t1:'1 Grupo E',t2:'3 melhor (A,B,C,D ou F)',f1:'',f2:''},
-    {id:'o2',fase:'Oitavas',t1:'1 Grupo I',t2:'3 melhor (C,D,F,G ou H)',f1:'',f2:''},
-    {id:'o3',fase:'Oitavas',t1:'2 Grupo A',t2:'2 Grupo B',f1:'',f2:''},
-    {id:'o4',fase:'Oitavas',t1:'1 Grupo F',t2:'2 Grupo C',f1:'',f2:''},
-    {id:'o5',fase:'Oitavas',t1:'2 Grupo K',t2:'2 Grupo L',f1:'',f2:''},
-    {id:'o6',fase:'Oitavas',t1:'1 Grupo H',t2:'2 Grupo J',f1:'',f2:''},
-    {id:'o7',fase:'Oitavas',t1:'1 Grupo D',t2:'3 melhor (B,E,F,I ou J)',f1:'',f2:''},
-    {id:'o8',fase:'Oitavas',t1:'1 Grupo G',t2:'3 melhor (A,E,H,I ou J)',f1:'',f2:''},
-    {id:'o9',fase:'Oitavas',t1:'2 Grupo F',t2:'A definir',f1:'',f2:''},
-    {id:'o10',fase:'Oitavas',t1:'2 Grupo E',t2:'2 Grupo I',f1:'',f2:''},
-    {id:'o11',fase:'Oitavas',t1:'1 Grupo C',t2:'A definir',f1:'',f2:''},
-    {id:'o12',fase:'Oitavas',t1:'1 Grupo L',t2:'3 melhor (E,H,I,J ou K)',f1:'',f2:''},
-    {id:'o13',fase:'Oitavas',t1:'1 Grupo J',t2:'2 Grupo H',f1:'',f2:''},
-    {id:'o14',fase:'Oitavas',t1:'2 Grupo D',t2:'2 Grupo G',f1:'',f2:''},
-    {id:'o15',fase:'Oitavas',t1:'1 Grupo B',t2:'3 melhor (E,F,G,I ou J)',f1:'',f2:''},
-    {id:'o16',fase:'Oitavas',t1:'1 Grupo K',t2:'3 melhor (D,E,I,J ou L)',f1:'',f2:''}
+    {id:'oi1',fase:'Oitavas',t1:'Venc 32avos O2',t2:'Venc 32avos O3',f1:'',f2:''},
+    {id:'oi2',fase:'Oitavas',t1:'Venc 32avos O1',t2:'Venc 32avos O4',f1:'',f2:''},
+    {id:'oi3',fase:'Oitavas',t1:'Venc 32avos O5',t2:'Venc 32avos O6',f1:'',f2:''},
+    {id:'oi4',fase:'Oitavas',t1:'Venc 32avos O7',t2:'Venc 32avos O8',f1:'',f2:''},
+    {id:'oi5',fase:'Oitavas',t1:'Venc 32avos O12',t2:'Venc 32avos O11',f1:'',f2:''},
+    {id:'oi6',fase:'Oitavas',t1:'Venc 32avos O9',t2:'Venc 32avos O10',f1:'',f2:''},
+    {id:'oi7',fase:'Oitavas',t1:'Venc 32avos O14',t2:'Venc 32avos O15',f1:'',f2:''},
+    {id:'oi8',fase:'Oitavas',t1:'Venc 32avos O13',t2:'Venc 32avos O16',f1:'',f2:''}
   ]},
   {id:'quartas',label:'Quartas de Final',open:false,jogos:[
-    {id:'q1',fase:'Quartas',t1:'Venc Oitava 1',t2:'Venc Oitava 2',f1:'',f2:''},
-    {id:'q2',fase:'Quartas',t1:'Venc Oitava 3',t2:'Venc Oitava 4',f1:'',f2:''},
-    {id:'q3',fase:'Quartas',t1:'Venc Oitava 5',t2:'Venc Oitava 6',f1:'',f2:''},
-    {id:'q4',fase:'Quartas',t1:'Venc Oitava 7',t2:'Venc Oitava 8',f1:'',f2:''},
-    {id:'q5',fase:'Quartas',t1:'Venc Oitava 9',t2:'Venc Oitava 10',f1:'',f2:''},
-    {id:'q6',fase:'Quartas',t1:'Venc Oitava 11',t2:'Venc Oitava 12',f1:'',f2:''},
-    {id:'q7',fase:'Quartas',t1:'Venc Oitava 13',t2:'Venc Oitava 14',f1:'',f2:''},
-    {id:'q8',fase:'Quartas',t1:'Venc Oitava 15',t2:'Venc Oitava 16',f1:'',f2:''}
+    {id:'q1',fase:'Quartas',t1:'Venc Oitava 2',t2:'Venc Oitava 1',f1:'',f2:''},
+    {id:'q2',fase:'Quartas',t1:'Venc Oitava 6',t2:'Venc Oitava 5',f1:'',f2:''},
+    {id:'q3',fase:'Quartas',t1:'Venc Oitava 3',t2:'Venc Oitava 4',f1:'',f2:''},
+    {id:'q4',fase:'Quartas',t1:'Venc Oitava 8',t2:'Venc Oitava 7',f1:'',f2:''}
   ]},
   {id:'semi',label:'Semifinais',open:false,jogos:[
     {id:'s1',fase:'Semifinal',t1:'Venc Quarta 1',t2:'Venc Quarta 2',f1:'',f2:''},
-    {id:'s2',fase:'Semifinal',t1:'Venc Quarta 3',t2:'Venc Quarta 4',f1:'',f2:''},
-    {id:'s3',fase:'Semifinal',t1:'Venc Quarta 5',t2:'Venc Quarta 6',f1:'',f2:''},
-    {id:'s4',fase:'Semifinal',t1:'Venc Quarta 7',t2:'Venc Quarta 8',f1:'',f2:''}
+    {id:'s2',fase:'Semifinal',t1:'Venc Quarta 3',t2:'Venc Quarta 4',f1:'',f2:''}
   ]},
   {id:'final',label:'Final',open:false,jogos:[
-    {id:'f1',fase:'3 Lugar - Semifinal 1',t1:'Perd Semi 1',t2:'Perd Semi 2',f1:'',f2:''},
-    {id:'f2',fase:'3 Lugar - Semifinal 2',t1:'Perd Semi 3',t2:'Perd Semi 4',f1:'',f2:''},
-    {id:'f3',fase:'Final',t1:'Venc Semi 1 ou 2',t2:'Venc Semi 3 ou 4',f1:'',f2:''}
+    {id:'f1',fase:'Disputa de 3 Lugar',t1:'Perd Semi 1',t2:'Perd Semi 2',f1:'',f2:''},
+    {id:'f2',fase:'Final',t1:'Venc Semi 1',t2:'Venc Semi 2',f1:'',f2:''}
   ]}
 ];
 
