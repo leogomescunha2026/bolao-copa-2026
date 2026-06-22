@@ -135,7 +135,7 @@ input[type=number]{width:68px;text-align:center;font-size:22px;font-weight:700;f
 <div id="page-cadastro" class="page active">
 <div class="wrap">
   <div class="hero">
-    <div class="hero-pill">&#x26BD; Bolao Solidario da</div>
+    <div class="hero-pill">&#x26BD; Bolao Solidario </div>
     <h1>Copa do Mundo <em>2026</em></h1>
     <p>Faca seus palpites e torca para acertar. Boa sorte!</p>
   </div>
@@ -356,6 +356,7 @@ var currentCadFase = 'grupos';
 var cadResults = {};
 var participants = [];
 var unsubRanking = null;
+var teamNames = {}; // { jogoId_1: 'Nome time 1', jogoId_2: 'Nome time 2' }
 
 var FLAGS = {
   'MX': '🇲🇽',
@@ -407,6 +408,20 @@ var FLAGS = {
   'HR': '🇭🇷',
   '': ''
 };
+function getTeamName(jogo, slot) {
+  var key = jogo.id + '_' + slot;
+  var custom = teamNames[key];
+  if (custom && custom.trim()) return custom.trim();
+  return slot === 1 ? jogo.t1 : jogo.t2;
+}
+
+function getTeamFlag(jogo, slot) {
+  var key = jogo.id + '_' + slot;
+  var customFlag = teamNames[key + '_flag'];
+  if (customFlag) return customFlag;
+  return slot === 1 ? jogo.f1 : jogo.f2;
+}
+
 function flag(code) {
   if (!code) return '';
   var lower = code.toLowerCase();
@@ -514,13 +529,17 @@ function buildCadastroUI() {
     for (var jj = 0; jj < fase.jogos.length; jj++) {
       var j2 = fase.jogos[jj];
       if (j2.fase !== subGroups[sg]) continue;
-      html += '<div class="match-lbl">' + j2.t1 + ' vs ' + j2.t2 + '</div>';
+      var nomeT1 = getTeamName(j2, 1);
+      var nomeT2 = getTeamName(j2, 2);
+      var flagT1 = getTeamFlag(j2, 1);
+      var flagT2 = getTeamFlag(j2, 2);
+      html += '<div class="match-lbl">' + nomeT1 + ' vs ' + nomeT2 + '</div>';
       html += '<div class="match-row">';
-      html += '<div class="team">' + (j2.f1 ? flag(j2.f1) : '') + j2.t1 + '</div>';
+      html += '<div class="team">' + (flagT1 ? flag(flagT1) : '') + nomeT1 + '</div>';
       html += '<input type="number" id="c_' + j2.id + '_1" min="0" max="20" placeholder="0">';
       html += '<div class="score-sep">x</div>';
       html += '<input type="number" id="c_' + j2.id + '_2" min="0" max="20" placeholder="0">';
-      html += '<div class="team right">' + (j2.f2 ? flag(j2.f2) : '') + j2.t2 + '</div>';
+      html += '<div class="team right">' + (flagT2 ? flag(flagT2) : '') + nomeT2 + '</div>';
       html += '</div>';
     }
     html += '</div>';
@@ -730,7 +749,8 @@ function loadAdminData() {
   return Promise.all([
     db.collection('config').doc('results').get(),
     db.collection('participants').get(),
-    db.collection('config').doc('phases').get()
+    db.collection('config').doc('phases').get(),
+    db.collection('config').doc('teamNames').get()
   ]).then(function(snaps) {
     cadResults = snaps[0].exists ? snaps[0].data() : {};
     participants = snaps[1].docs.map(function(d) { var data = d.data(); data.id = d.id; return data; });
@@ -740,6 +760,7 @@ function loadAdminData() {
         if (phData[FASES[i].id] !== undefined) FASES[i].open = phData[FASES[i].id];
       }
     }
+    teamNames = snaps[3].exists ? snaps[3].data() : {};
   });
 }
 
@@ -776,25 +797,74 @@ function buildAdminResultados() {
   var container = eid('adminResultados');
   var fase = null;
   for (var j = 0; j < FASES.length; j++) { if (FASES[j].id === currentAdminFase) { fase = FASES[j]; break; } }
-  var subGroups = [];
-  for (var k = 0; k < fase.jogos.length; k++) { if (subGroups.indexOf(fase.jogos[k].fase) === -1) subGroups.push(fase.jogos[k].fase); }
+
   var html = '';
-  for (var sg = 0; sg < subGroups.length; sg++) {
-    html += '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px">' + subGroups[sg] + '</div>';
+
+  if (fase.id !== 'grupos') {
+    html += '<div style="background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.25);border-radius:8px;padding:16px;margin-bottom:18px">';
+    html += '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:6px">Definir Times Classificados</div>';
+    html += '<p style="color:var(--muted);font-size:12px;margin-bottom:14px">Digite o nome do time que se classificou em cada confronto. O texto cinza mostra a regra (ex: "1 Grupo A"). Deixe em branco para manter o placeholder.</p>';
     for (var jj = 0; jj < fase.jogos.length; jj++) {
       var j2 = fase.jogos[jj];
-      if (j2.fase !== subGroups[sg]) continue;
-      var r = cadResults[j2.id] || {};
+      var k1 = j2.id + '_1';
+      var k2 = j2.id + '_2';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;align-items:end">';
+      html += '<div><label style="font-size:10px;margin-bottom:4px">' + j2.t1 + '</label>';
+      html += '<input type="text" id="tn_' + k1 + '" placeholder="' + j2.t1 + '" value="' + (teamNames[k1] || '') + '" style="font-size:13px;padding:8px 10px"></div>';
+      html += '<div><label style="font-size:10px;margin-bottom:4px">' + j2.t2 + '</label>';
+      html += '<input type="text" id="tn_' + k2 + '" placeholder="' + j2.t2 + '" value="' + (teamNames[k2] || '') + '" style="font-size:13px;padding:8px 10px"></div>';
+      html += '</div>';
+    }
+    html += '<button class="btn btn-primary btn-sm" id="btnSalvarTimes" style="margin-top:6px">Salvar Nomes dos Times</button>';
+    html += '<div id="timesAlert" class="alert" style="margin-top:10px"></div>';
+    html += '</div>';
+  }
+
+  var subGroups = [];
+  for (var k = 0; k < fase.jogos.length; k++) { if (subGroups.indexOf(fase.jogos[k].fase) === -1) subGroups.push(fase.jogos[k].fase); }
+  for (var sg = 0; sg < subGroups.length; sg++) {
+    html += '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px">' + subGroups[sg] + '</div>';
+    for (var jj2 = 0; jj2 < fase.jogos.length; jj2++) {
+      var j3 = fase.jogos[jj2];
+      if (j3.fase !== subGroups[sg]) continue;
+      var r = cadResults[j3.id] || {};
+      var nomeT1 = getTeamName(j3, 1);
+      var nomeT2 = getTeamName(j3, 2);
+      var flagT1 = getTeamFlag(j3, 1);
+      var flagT2 = getTeamFlag(j3, 2);
       html += '<div class="match-row">';
-      html += '<div class="team" style="font-size:13px">' + (j2.f1 ? flag(j2.f1) : '') + j2.t1 + '</div>';
-      html += '<input type="number" id="r_' + j2.id + '_1" min="0" max="20" placeholder="-" value="' + (r.g1 !== undefined ? r.g1 : '') + '">';
+      html += '<div class="team" style="font-size:13px">' + (flagT1 ? flag(flagT1) : '') + nomeT1 + '</div>';
+      html += '<input type="number" id="r_' + j3.id + '_1" min="0" max="20" placeholder="-" value="' + (r.g1 !== undefined ? r.g1 : '') + '">';
       html += '<div class="score-sep">x</div>';
-      html += '<input type="number" id="r_' + j2.id + '_2" min="0" max="20" placeholder="-" value="' + (r.g2 !== undefined ? r.g2 : '') + '">';
-      html += '<div class="team right" style="font-size:13px">' + (j2.f2 ? flag(j2.f2) : '') + j2.t2 + '</div>';
+      html += '<input type="number" id="r_' + j3.id + '_2" min="0" max="20" placeholder="-" value="' + (r.g2 !== undefined ? r.g2 : '') + '">';
+      html += '<div class="team right" style="font-size:13px">' + nomeT2 + (flagT2 ? (' ' + flag(flagT2)) : '') + '</div>';
       html += '</div>';
     }
   }
   container.innerHTML = html;
+
+  var btnSalvarTimes = eid('btnSalvarTimes');
+  if (btnSalvarTimes) btnSalvarTimes.onclick = salvarNomesTimes;
+}
+
+function salvarNomesTimes() {
+  var fase = null;
+  for (var j = 0; j < FASES.length; j++) { if (FASES[j].id === currentAdminFase) { fase = FASES[j]; break; } }
+  for (var jj = 0; jj < fase.jogos.length; jj++) {
+    var j2 = fase.jogos[jj];
+    var v1 = eid('tn_' + j2.id + '_1');
+    var v2 = eid('tn_' + j2.id + '_2');
+    if (v1) { if (v1.value.trim()) teamNames[j2.id + '_1'] = v1.value.trim(); else delete teamNames[j2.id + '_1']; }
+    if (v2) { if (v2.value.trim()) teamNames[j2.id + '_2'] = v2.value.trim(); else delete teamNames[j2.id + '_2']; }
+  }
+  db.collection('config').doc('teamNames').set(teamNames).then(function() {
+    showAlert('timesAlert','ok','Nomes dos times salvos!');
+    setTimeout(function() { hideAlert('timesAlert'); }, 3000);
+    buildAdminResultados();
+    buildCadastroUI();
+  }).catch(function(err) {
+    showAlert('timesAlert','err','Erro: ' + err.message);
+  });
 }
 
 function salvarResultados() {
@@ -846,7 +916,7 @@ function buildAdminParticipants() {
       var pal = p.palpites[jogo.id];
       if (!pal) continue;
       var st = palStatus(pal, cadResults[jogo.id]);
-      html += '<div class="pitem"><span style="font-size:11px;color:var(--muted)">' + escH(jogo.t1) + ' x ' + escH(jogo.t2) + '</span>';
+      html += '<div class="pitem"><span style="font-size:11px;color:var(--muted)">' + escH(getTeamName(jogo,1)) + ' x ' + escH(getTeamName(jogo,2)) + '</span>';
       html += '<span class="pscore" style="color:' + colors[st] + '">' + icons[st] + ' ' + pal.g1 + 'x' + pal.g2 + '</span></div>';
     }
     var ts = p.ts ? new Date(p.ts).toLocaleString('pt-BR') : '';
@@ -908,7 +978,8 @@ function resetTudo() {
 
 Promise.all([
   db.collection('config').doc('phases').get(),
-  db.collection('config').doc('results').get()
+  db.collection('config').doc('results').get(),
+  db.collection('config').doc('teamNames').get()
 ]).then(function(snaps) {
   if (snaps[0].exists) {
     var phData = snaps[0].data();
@@ -917,6 +988,7 @@ Promise.all([
     }
   }
   if (snaps[1].exists) cadResults = snaps[1].data();
+  if (snaps[2].exists) teamNames = snaps[2].data();
   eid('loading').style.display = 'none';
   buildCadastroUI();
 }).catch(function(err) {
