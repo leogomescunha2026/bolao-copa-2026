@@ -425,6 +425,43 @@ function getTeamFlag(jogo, slot) {
   return slot === 1 ? jogo.f1 : jogo.f2;
 }
 
+// Given a placeholder text like "Venc Oitava 2" or "Venc 32avos O5", find the
+// referenced match in a previous phase and return a short description of
+// what feeds into it (e.g. "1 Grupo E vs 3 melhor (...)"). Falls back to the
+// placeholder text itself if no match is found or it's a group-stage ref.
+function resolveOrigin(placeholderText) {
+  if (!placeholderText) return '';
+  var lower = placeholderText.toLowerCase();
+  var targetFaseId = null;
+  var numMatch = null;
+
+  if (lower.indexOf('oitava') !== -1) {
+    targetFaseId = 'oitavas';
+    numMatch = placeholderText.match(/oitava\s*(\d+)/i);
+  } else if (lower.indexOf('quarta') !== -1) {
+    targetFaseId = 'quartas';
+    numMatch = placeholderText.match(/quarta\s*(\d+)/i);
+  } else if (lower.indexOf('semi') !== -1) {
+    targetFaseId = 'semi';
+    numMatch = placeholderText.match(/semi\s*(\d+)/i);
+  } else if (lower.indexOf('32avos') !== -1 || lower.indexOf('32 avos') !== -1) {
+    targetFaseId = 'segundafase';
+    numMatch = placeholderText.match(/32\s*avos\s*o?(\d+)/i);
+  }
+
+  if (!targetFaseId || !numMatch) return placeholderText;
+  var targetIndex = parseInt(numMatch[1], 10);
+
+  var targetFase = null;
+  for (var i = 0; i < FASES.length; i++) { if (FASES[i].id === targetFaseId) { targetFase = FASES[i]; break; } }
+  if (!targetFase || !targetFase.jogos[targetIndex - 1]) return placeholderText;
+
+  var refJogo = targetFase.jogos[targetIndex - 1];
+  var n1 = getTeamName(refJogo, 1);
+  var n2 = getTeamName(refJogo, 2);
+  return n1 + ' vs ' + n2;
+}
+
 function flag(code) {
   if (!code) return '';
   var lower = code.toLowerCase();
@@ -811,10 +848,14 @@ function buildAdminResultados() {
       var j2 = fase.jogos[jj];
       var k1 = j2.id + '_1';
       var k2 = j2.id + '_2';
-      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;align-items:end">';
-      html += '<div><label style="font-size:10px;margin-bottom:4px">' + j2.t1 + '</label>';
+      var origem1 = resolveOrigin(j2.t1);
+      var origem2 = resolveOrigin(j2.t2);
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;align-items:end">';
+      html += '<div><label style="font-size:10px;margin-bottom:2px">' + j2.t1 + '</label>';
+      if (origem1 !== j2.t1) html += '<div style="font-size:10px;color:var(--gold);margin-bottom:4px;opacity:.85">' + escH(origem1) + '</div>';
       html += '<input type="text" id="tn_' + k1 + '" placeholder="' + j2.t1 + '" value="' + (teamNames[k1] || '') + '" style="font-size:13px;padding:8px 10px"></div>';
-      html += '<div><label style="font-size:10px;margin-bottom:4px">' + j2.t2 + '</label>';
+      html += '<div><label style="font-size:10px;margin-bottom:2px">' + j2.t2 + '</label>';
+      if (origem2 !== j2.t2) html += '<div style="font-size:10px;color:var(--gold);margin-bottom:4px;opacity:.85">' + escH(origem2) + '</div>';
       html += '<input type="text" id="tn_' + k2 + '" placeholder="' + j2.t2 + '" value="' + (teamNames[k2] || '') + '" style="font-size:13px;padding:8px 10px"></div>';
       html += '</div>';
     }
