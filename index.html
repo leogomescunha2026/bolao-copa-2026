@@ -80,7 +80,8 @@ input[type=number]{width:68px;text-align:center;font-size:22px;font-weight:700;f
 .prog-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .6s ease}
 .pcard{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:16px;margin-bottom:10px}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:7px;margin-top:10px}
-.pitem{background:var(--surface);border-radius:6px;padding:7px 11px;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+.pitem{background:var(--surface);border-radius:6px;padding:7px 11px;font-size:12px;display:flex;justify-content:space-between;align-items:center;transition:background .15s,box-shadow .15s}
+.pitem:hover{background:var(--border2);box-shadow:0 0 0 1px var(--gold)}
 .pscore{font-family:'Bebas Neue',sans-serif;font-size:18px}
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:center;justify-content:center}
 .overlay.on{display:flex}
@@ -119,6 +120,29 @@ input[type=number]{width:68px;text-align:center;font-size:22px;font-weight:700;f
     <div class="modal-btns">
       <button class="btn btn-primary" id="btnLogin">Entrar</button>
       <button class="btn btn-secondary" id="btnCancelLogin">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="editPalpiteModal">
+  <div class="modal">
+    <h2>Editar Palpite</h2>
+    <div id="editPalpiteInfo" style="margin-bottom:16px"></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:8px">
+      <div style="text-align:center">
+        <label id="editTeam1Label" style="font-size:11px;margin-bottom:8px;display:block"></label>
+        <input type="number" id="editG1" min="0" max="20" style="width:72px">
+      </div>
+      <div class="score-sep" style="font-size:24px">x</div>
+      <div style="text-align:center">
+        <label id="editTeam2Label" style="font-size:11px;margin-bottom:8px;display:block"></label>
+        <input type="number" id="editG2" min="0" max="20" style="width:72px">
+      </div>
+    </div>
+    <div id="editPalpiteAlert" class="alert" style="margin-top:10px"></div>
+    <div class="modal-btns">
+      <button class="btn btn-primary" id="btnSalvarPalpite">Salvar</button>
+      <button class="btn btn-secondary" id="btnCancelEditPalpite">Cancelar</button>
     </div>
   </div>
 </div>
@@ -960,7 +984,7 @@ function buildAdminParticipants() {
       var pal = p.palpites[jogo.id];
       if (!pal) continue;
       var st = palStatus(pal, cadResults[jogo.id]);
-      html += '<div class="pitem"><span style="font-size:11px;color:var(--muted)">' + escH(getTeamName(jogo,1)) + ' x ' + escH(getTeamName(jogo,2)) + '</span>';
+      html += '<div class="pitem" style="cursor:pointer" onclick="editarPalpite(\'' + p.id + '\',\'' + escH(p.name) + '\',\'' + jogo.id + '\')"><span style="font-size:11px;color:var(--muted)">' + escH(getTeamName(jogo,1)) + ' x ' + escH(getTeamName(jogo,2)) + '</span>';
       html += '<span class="pscore" style="color:' + colors[st] + '">' + icons[st] + ' ' + pal.g1 + 'x' + pal.g2 + '</span></div>';
     }
     var ts = p.ts ? new Date(p.ts).toLocaleString('pt-BR') : '';
@@ -980,6 +1004,67 @@ function removerParticipante(docId, nome) {
     alert('Erro ao remover: ' + err.message);
   });
 }
+
+var editPalpiteCtx = null;
+
+function editarPalpite(docId, nome, jogoId) {
+  var jogo = null;
+  for (var i = 0; i < ALL_JOGOS.length; i++) { if (ALL_JOGOS[i].id === jogoId) { jogo = ALL_JOGOS[i]; break; } }
+  if (!jogo) return;
+  var p = null;
+  for (var j = 0; j < participants.length; j++) { if (participants[j].id === docId) { p = participants[j]; break; } }
+  if (!p) return;
+  var pal = (p.palpites || {})[jogoId] || {g1:0,g2:0};
+
+  editPalpiteCtx = {docId:docId, jogoId:jogoId};
+
+  var nomeT1 = getTeamName(jogo, 1);
+  var nomeT2 = getTeamName(jogo, 2);
+
+  eid('editPalpiteInfo').innerHTML = '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700">' + escH(nome) + '</div><div style="color:var(--muted);font-size:13px;margin-top:4px">' + escH(nomeT1) + ' x ' + escH(nomeT2) + '</div>';
+  eid('editTeam1Label').textContent = nomeT1;
+  eid('editTeam2Label').textContent = nomeT2;
+  eid('editG1').value = pal.g1;
+  eid('editG2').value = pal.g2;
+  hideAlert('editPalpiteAlert');
+  eid('editPalpiteModal').classList.add('on');
+}
+
+function salvarPalpiteEditado() {
+  if (!editPalpiteCtx) return;
+  var v1 = eid('editG1').value;
+  var v2 = eid('editG2').value;
+  if (v1 === '' || v2 === '') {
+    showAlert('editPalpiteAlert','err','Preencha os dois placares.');
+    return;
+  }
+  var docId = editPalpiteCtx.docId;
+  var jogoId = editPalpiteCtx.jogoId;
+  var fieldPath = 'palpites.' + jogoId;
+  var update = {};
+  update[fieldPath] = {g1: parseInt(v1), g2: parseInt(v2)};
+
+  db.collection('participants').doc(docId).update(update).then(function() {
+    var p = null;
+    for (var j = 0; j < participants.length; j++) { if (participants[j].id === docId) { p = participants[j]; break; } }
+    if (p) {
+      if (!p.palpites) p.palpites = {};
+      p.palpites[jogoId] = {g1: parseInt(v1), g2: parseInt(v2)};
+    }
+    eid('editPalpiteModal').classList.remove('on');
+    editPalpiteCtx = null;
+    buildAdminParticipants();
+    renderRanking();
+  }).catch(function(err) {
+    showAlert('editPalpiteAlert','err','Erro: ' + err.message);
+  });
+}
+
+eid('btnSalvarPalpite').onclick = salvarPalpiteEditado;
+eid('btnCancelEditPalpite').onclick = function() {
+  eid('editPalpiteModal').classList.remove('on');
+  editPalpiteCtx = null;
+};
 
 function exportCSV() {
   var header = 'Nome,Pontos,Exatos,Vencedores';
