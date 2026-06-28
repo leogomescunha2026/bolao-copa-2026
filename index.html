@@ -622,13 +622,13 @@ function enviarPalpites() {
   }
 
   // Normalize: trim, collapse internal spaces, lowercase, remove accents for doc ID
-  // IMPORTANT: keep formula compatible with already-saved participants (no separator between nome/sobrenome)
+  // IMPORTANT: this formula must match what's already saved in Firestore (hyphen between every word)
   var nomeTrim = nome.trim().replace(/\s+/g, ' ');
   var sobrenomeTrim = sobrenome.trim().replace(/\s+/g, ' ');
   var fullName = nomeTrim.charAt(0).toUpperCase() + nomeTrim.slice(1).toLowerCase() + ' ' + sobrenomeTrim.charAt(0).toUpperCase() + sobrenomeTrim.slice(1).toLowerCase();
-  var normalized = (nomeTrim + sobrenomeTrim).toLowerCase()
+  var normalized = (nomeTrim + ' ' + sobrenomeTrim).toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+    .replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').replace(/^-+|-+$/g,'');
   var docId = normalized || ('user-' + Date.now());
 
   var fase = null;
@@ -993,12 +993,19 @@ function buildAdminParticipants() {
 
   for (var i = 0; i < ranked.length; i++) {
     var p = ranked[i];
+    var idMismatch = (calcExpectedId(p.name) !== p.id);
     html += '<div class="pcard"><div class="fb" style="margin-bottom:8px">';
     html += '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:700">' + escH(p.name) + '</div>';
     html += '<div style="display:flex;align-items:center;gap:10px">';
     html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:24px;color:var(--gold)">' + p.pts + ' pts</div>';
+    if (idMismatch) {
+      html += '<button class="btn btn-sm" style="font-size:11px;padding:5px 10px;letter-spacing:0;background:rgba(64,144,232,.15);color:var(--blue);border:1px solid rgba(64,144,232,.3)" onclick="corrigirIdParticipante(\'' + p.id + '\',\'' + escH(p.name) + '\')" title="ID divergente - clique para corrigir">Corrigir ID</button>';
+    }
     html += '<button class="btn btn-danger" style="font-size:11px;padding:5px 10px;letter-spacing:0" onclick="removerParticipante(\'' + p.id + '\',\'' + escH(p.name) + '\')">Remover</button>';
     html += '</div>';
+    if (idMismatch) {
+      html += '<div style="font-size:10px;color:var(--blue);margin-top:4px">ID atual: ' + escH(p.id) + ' (esperado: ' + escH(calcExpectedId(p.name)) + ')</div>';
+    }
     html += '</div><div class="pgrid">';
     for (var jj = 0; jj < ALL_JOGOS.length; jj++) {
       var jogo = ALL_JOGOS[jj];
@@ -1023,6 +1030,41 @@ function removerParticipante(docId, nome) {
     alert(nome + ' removido com sucesso.');
   }).catch(function(err) {
     alert('Erro ao remover: ' + err.message);
+  });
+}
+
+function calcExpectedId(fullName) {
+  var normalized = fullName.trim().replace(/\s+/g, ' ').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').replace(/^-+|-+$/g,'');
+  return normalized;
+}
+
+function corrigirIdParticipante(oldDocId, nome) {
+  var expectedId = calcExpectedId(nome);
+  if (expectedId === oldDocId) {
+    alert('O ID deste participante ja esta correto (' + oldDocId + ').');
+    return;
+  }
+  if (!confirm('Corrigir ID de "' + nome + '"?\n\nDe: ' + oldDocId + '\nPara: ' + expectedId + '\n\nIsso recria o registro com o novo ID, mantendo todos os palpites.')) return;
+
+  db.collection('participants').doc(oldDocId).get().then(function(doc2) {
+    if (!doc2.exists) { alert('Documento original nao encontrado.'); return; }
+    var data = doc2.data();
+    db.collection('participants').doc(expectedId).get().then(function(checkDoc) {
+      if (checkDoc.exists) {
+        alert('Ja existe um documento com o ID "' + expectedId + '". Corrija manualmente para evitar perda de dados.');
+        return;
+      }
+      return db.collection('participants').doc(expectedId).set(data).then(function() {
+        return db.collection('participants').doc(oldDocId).delete();
+      }).then(function() {
+        alert('ID corrigido com sucesso! Agora "' + nome + '" pode enviar as proximas fases normalmente.');
+        buildAdminUI();
+      });
+    });
+  }).catch(function(err) {
+    alert('Erro ao corrigir: ' + err.message);
   });
 }
 
