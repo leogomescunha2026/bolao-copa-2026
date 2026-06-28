@@ -159,7 +159,7 @@ input[type=number]{width:68px;text-align:center;font-size:22px;font-weight:700;f
 <div id="page-cadastro" class="page active">
 <div class="wrap">
   <div class="hero">
-    <div class="hero-pill">&#x26BD; Bolao Solidario </div>
+    <div class="hero-pill">&#x26BD; Bolao Solidario</div>
     <h1>Copa do Mundo <em>2026</em></h1>
     <p>Faca seus palpites e torca para acertar. Boa sorte!</p>
   </div>
@@ -229,6 +229,7 @@ input[type=number]{width:68px;text-align:center;font-size:22px;font-weight:700;f
   </div>
   <div class="card">
     <div class="card-title">Palpites dos Participantes</div>
+    <input type="text" id="searchParts" placeholder="Buscar participante pelo nome..." style="margin-bottom:14px">
     <div id="adminParts"></div>
   </div>
 </div>
@@ -620,9 +621,12 @@ function enviarPalpites() {
     return;
   }
 
-  // Normalize: trim, lowercase, remove accents for doc ID
-  var fullName = nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase() + ' ' + sobrenome.charAt(0).toUpperCase() + sobrenome.slice(1).toLowerCase();
-  var normalized = (nome + sobrenome).toLowerCase()
+  // Normalize: trim, collapse internal spaces, lowercase, remove accents for doc ID
+  // IMPORTANT: keep formula compatible with already-saved participants (no separator between nome/sobrenome)
+  var nomeTrim = nome.trim().replace(/\s+/g, ' ');
+  var sobrenomeTrim = sobrenome.trim().replace(/\s+/g, ' ');
+  var fullName = nomeTrim.charAt(0).toUpperCase() + nomeTrim.slice(1).toLowerCase() + ' ' + sobrenomeTrim.charAt(0).toUpperCase() + sobrenomeTrim.slice(1).toLowerCase();
+  var normalized = (nomeTrim + sobrenomeTrim).toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
   var docId = normalized || ('user-' + Date.now());
@@ -806,6 +810,11 @@ function buildAdminUI() {
     buildAdminTabs();
     buildAdminResultados();
     buildAdminParticipants();
+    var searchEl = eid('searchParts');
+    if (searchEl && !searchEl.dataset.bound) {
+      searchEl.dataset.bound = '1';
+      searchEl.oninput = function() { buildAdminParticipants(); };
+    }
   });
 }
 
@@ -961,12 +970,24 @@ function buildAdminParticipants() {
     container.innerHTML = '<div class="empty"><div class="ico">&#x1F4CB;</div><p>Nenhum palpite enviado ainda.</p></div>';
     return;
   }
+  var searchEl = eid('searchParts');
+  var searchTerm = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
   var ranked = participants.map(function(p) {
     var sc = calcScore(p.palpites || {}, cadResults);
     return {id:p.id, name:p.name, pts:sc.pts, exact:sc.exact, winner:sc.winner, palpites:p.palpites||{}, ts:p.ts};
   }).sort(function(a,b) { return b.pts - a.pts; });
 
-  var html = '<p style="color:var(--muted);font-size:12px;margin-bottom:14px">' + participants.length + ' participante(s)</p>';
+  if (searchTerm) {
+    ranked = ranked.filter(function(p) { return p.name.toLowerCase().indexOf(searchTerm) !== -1; });
+  }
+
+  if (!ranked.length) {
+    container.innerHTML = '<div class="empty"><div class="ico">&#x1F50D;</div><p>Nenhum participante encontrado com esse nome.</p></div>';
+    return;
+  }
+
+  var html = '<p style="color:var(--muted);font-size:12px;margin-bottom:14px">' + ranked.length + ' de ' + participants.length + ' participante(s)</p>';
   var colors = {exact:'var(--gold)',winner:'#7AEEA8',miss:'var(--red)',none:'var(--muted)'};
   var icons = {exact:'*',winner:'v',miss:'x',none:'.'};
 
