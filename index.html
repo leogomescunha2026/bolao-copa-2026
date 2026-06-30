@@ -346,28 +346,28 @@ var FASES = [
     {id:'o16',fase:'32 avos',t1:'1 Grupo K',t2:'3 melhor (D,E,I,J ou L)',f1:'',f2:''}
   ]},
   {id:'oitavas',label:'Oitavas de Final',open:false,jogos:[
-    {id:'oi1',fase:'Oitavas',t1:'Venc 32avos O2',t2:'Venc 32avos O3',f1:'',f2:''},
-    {id:'oi2',fase:'Oitavas',t1:'Venc 32avos O1',t2:'Venc 32avos O4',f1:'',f2:''},
-    {id:'oi3',fase:'Oitavas',t1:'Venc 32avos O5',t2:'Venc 32avos O6',f1:'',f2:''},
-    {id:'oi4',fase:'Oitavas',t1:'Venc 32avos O7',t2:'Venc 32avos O8',f1:'',f2:''},
-    {id:'oi5',fase:'Oitavas',t1:'Venc 32avos O12',t2:'Venc 32avos O11',f1:'',f2:''},
-    {id:'oi6',fase:'Oitavas',t1:'Venc 32avos O9',t2:'Venc 32avos O10',f1:'',f2:''},
-    {id:'oi7',fase:'Oitavas',t1:'Venc 32avos O14',t2:'Venc 32avos O15',f1:'',f2:''},
-    {id:'oi8',fase:'Oitavas',t1:'Venc 32avos O13',t2:'Venc 32avos O16',f1:'',f2:''}
+    {id:'oi1',fase:'Oitavas - Chave A',t1:'Venc Alemanha x Paraguai',t2:'Venc Franca x Suecia',f1:'',f2:''},
+    {id:'oi2',fase:'Oitavas - Chave A',t1:'Venc Africa do Sul x Canada',t2:'Venc Holanda x Marrocos',f1:'',f2:''},
+    {id:'oi3',fase:'Oitavas - Chave A',t1:'Venc Portugal x Croacia',t2:'Venc Espanha x Austria',f1:'',f2:''},
+    {id:'oi4',fase:'Oitavas - Chave A',t1:'Venc EUA x Bosnia',t2:'Venc Belgica x Senegal',f1:'',f2:''},
+    {id:'oi5',fase:'Oitavas - Chave B',t1:'Venc Brasil x Japao',t2:'Venc C. Marfim x Noruega',f1:'',f2:''},
+    {id:'oi6',fase:'Oitavas - Chave B',t1:'Venc Mexico x Equador',t2:'Venc Inglaterra x RD Congo',f1:'',f2:''},
+    {id:'oi7',fase:'Oitavas - Chave B',t1:'Venc Argentina x Cabo Verde',t2:'Venc Australia x Egito',f1:'',f2:''},
+    {id:'oi8',fase:'Oitavas - Chave B',t1:'Venc Suica x Algeria',t2:'Venc Colombia x Gana',f1:'',f2:''}
   ]},
   {id:'quartas',label:'Quartas de Final',open:false,jogos:[
-    {id:'q1',fase:'Quartas',t1:'Venc Oitava 2',t2:'Venc Oitava 1',f1:'',f2:''},
-    {id:'q2',fase:'Quartas',t1:'Venc Oitava 6',t2:'Venc Oitava 5',f1:'',f2:''},
-    {id:'q3',fase:'Quartas',t1:'Venc Oitava 3',t2:'Venc Oitava 4',f1:'',f2:''},
-    {id:'q4',fase:'Quartas',t1:'Venc Oitava 8',t2:'Venc Oitava 7',f1:'',f2:''}
+    {id:'q1',fase:'Quartas - Chave A',t1:'Venc Oitava A1',t2:'Venc Oitava A2',f1:'',f2:''},
+    {id:'q2',fase:'Quartas - Chave A',t1:'Venc Oitava A3',t2:'Venc Oitava A4',f1:'',f2:''},
+    {id:'q3',fase:'Quartas - Chave B',t1:'Venc Oitava B1',t2:'Venc Oitava B2',f1:'',f2:''},
+    {id:'q4',fase:'Quartas - Chave B',t1:'Venc Oitava B3',t2:'Venc Oitava B4',f1:'',f2:''}
   ]},
   {id:'semi',label:'Semifinais',open:false,jogos:[
-    {id:'s1',fase:'Semifinal',t1:'Venc Quarta 1',t2:'Venc Quarta 2',f1:'',f2:''},
-    {id:'s2',fase:'Semifinal',t1:'Venc Quarta 3',t2:'Venc Quarta 4',f1:'',f2:''}
+    {id:'s1',fase:'Semifinal - Chave A',t1:'Venc Quarta A1',t2:'Venc Quarta A2',f1:'',f2:''},
+    {id:'s2',fase:'Semifinal - Chave B',t1:'Venc Quarta B1',t2:'Venc Quarta B2',f1:'',f2:''}
   ]},
   {id:'final',label:'Final',open:false,jogos:[
-    {id:'f1',fase:'Disputa de 3 Lugar',t1:'Perd Semi 1',t2:'Perd Semi 2',f1:'',f2:''},
-    {id:'f2',fase:'Final',t1:'Venc Semi 1',t2:'Venc Semi 2',f1:'',f2:''}
+    {id:'f1',fase:'Disputa de 3 Lugar',t1:'Perd Semi Chave A',t2:'Perd Semi Chave B',f1:'',f2:''},
+    {id:'f2',fase:'Final',t1:'Venc Semi Chave A',t2:'Venc Semi Chave B',f1:'',f2:''}
   ]}
 ];
 
@@ -458,24 +458,34 @@ function resolveOrigin(placeholderText) {
   if (!placeholderText) return '';
   var lower = placeholderText.toLowerCase();
   var targetFaseId = null;
-  var numMatch = null;
+  var targetIndex = null;
 
   if (lower.indexOf('oitava') !== -1) {
     targetFaseId = 'oitavas';
-    numMatch = placeholderText.match(/oitava\s*(\d+)/i);
+    var m = placeholderText.match(/oitava\s*[AB]?(\d+)/i);
+    if (m) {
+      var isB = /oitava\s*B/i.test(placeholderText);
+      targetIndex = parseInt(m[1], 10) + (isB ? 4 : 0);
+    }
   } else if (lower.indexOf('quarta') !== -1) {
     targetFaseId = 'quartas';
-    numMatch = placeholderText.match(/quarta\s*(\d+)/i);
+    var m2 = placeholderText.match(/quarta\s*[AB]?(\d+)/i);
+    if (m2) {
+      var isB2 = /quarta\s*B/i.test(placeholderText);
+      targetIndex = parseInt(m2[1], 10) + (isB2 ? 2 : 0);
+    }
   } else if (lower.indexOf('semi') !== -1) {
     targetFaseId = 'semi';
-    numMatch = placeholderText.match(/semi\s*(\d+)/i);
+    // "Venc Semi Chave A" -> index 1, "Venc Semi Chave B" -> index 2
+    var isB3 = /chave\s*B/i.test(placeholderText);
+    targetIndex = isB3 ? 2 : 1;
   } else if (lower.indexOf('32avos') !== -1 || lower.indexOf('32 avos') !== -1) {
     targetFaseId = 'segundafase';
-    numMatch = placeholderText.match(/32\s*avos\s*o?(\d+)/i);
+    var m4 = placeholderText.match(/32\s*avos\s*o?(\d+)/i);
+    if (m4) targetIndex = parseInt(m4[1], 10);
   }
 
-  if (!targetFaseId || !numMatch) return placeholderText;
-  var targetIndex = parseInt(numMatch[1], 10);
+  if (!targetFaseId || !targetIndex) return placeholderText;
 
   var targetFase = null;
   for (var i = 0; i < FASES.length; i++) { if (FASES[i].id === targetFaseId) { targetFase = FASES[i]; break; } }
